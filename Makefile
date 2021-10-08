@@ -16,5 +16,8 @@ CMDS=csi-raid
 all: build
 
 include release-tools/build.make
-
+REGISTRY_NAME=jw-cloud.org:18443
+IMAGE_TAGS=v0.0.3
 BUILD_PLATFORMS=linux amd64; linux arm -arm; linux arm64 -arm64; linux ppc64le -ppc64le; linux s390x -s390x
+
+#nmap -p 18443 jw-cloud.org

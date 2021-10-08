@@ -83,6 +83,7 @@ func (p *nfsProvisioner) Provision(ctx context.Context, options controller.Provi
 		return nil, controller.ProvisioningFinished, fmt.Errorf("claim Selector is not supported")
 	}
 	glog.V(4).Infof("nfs provisioner: VolumeOptions %v", options)
+	glog.V(4).Infof("csi-raid starts")
 
 	pvcNamespace := options.PVC.Namespace
 	pvcName := options.PVC.Name

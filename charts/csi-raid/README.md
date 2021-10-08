@@ -5,7 +5,7 @@ The [NFS subdir external provisioner](https://github.com/JuergenWewer/csi-raid) 
 ## TL;DR;
 
 ```console
-$ helm repo add csi-raid https://kubernetes-sigs.github.io/csi-raid/
+$ helm repo add csi-raid https://github.com/JuergenWewer/csi-raid/
 $ helm install csi-raid csi-raid/csi-raid \
     --set nfs.server=x.x.x.x \
     --set nfs.path=/exported/path
@@ -52,7 +52,7 @@ The following tables lists the configurable parameters of this chart and their d
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `replicaCount`                      | Number of provisioner instances to deployed                                                           | `1`                                                      |
 | `strategyType`                      | Specifies the strategy used to replace old Pods by new ones                                           | `Recreate`                                               |
-| `image.repository`                  | Provisioner image                                                                                     | `k8s.gcr.io/sig-storage/csi-raid` |
+| `image.repository`                  | Provisioner image                                                                                     | `jw-cloud.org:18443/csi-raid` |
 | `image.tag`                         | Version of provisioner image                                                                          | `v4.0.2`                                                 |
 | `image.pullPolicy`                  | Image pull policy                                                                                     | `IfNotPresent`                                           |
 | `imagePullSecrets`                  | Image pull secrets                                                                                    | `[]`                                                     |

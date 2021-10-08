@@ -14,7 +14,7 @@ spec:
       serviceAccountName: nfs-client-provisioner
       containers:
         - name: nfs-client-provisioner
-          image: k8s.gcr.io/sig-storage/csi-raid:v4.0.2
+          image: jw-cloud.org:18443/csi-raid:v4.0.2
           volumeMounts:
             - name: nfs-client-root
               mountPath: /persistentvolumes
