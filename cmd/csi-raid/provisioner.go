@@ -21,22 +21,21 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/golang/glog"
+	v1 "k8s.io/api/core/v1"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/golang/glog"
-	v1 "k8s.io/api/core/v1"
-
+	"github.com/JuergenWewer/csi-raid-controller"
 	storage "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/kubernetes/pkg/apis/core/v1/helper"
-	"sigs.k8s.io/sig-storage-lib-external-provisioner/v6/controller"
 )
 
 const (
@@ -47,6 +46,9 @@ type nfsProvisioner struct {
 	client kubernetes.Interface
 	server string
 	path   string
+	source string
+	target string
+	active bool
 }
 
 type pvcMetadata struct {
@@ -56,7 +58,7 @@ type pvcMetadata struct {
 }
 
 var pattern = regexp.MustCompile(`\${\.PVC\.((labels|annotations)\.(.*?)|.*?)}`)
-
+var ErrEnvVarEmpty = errors.New("getenv: environment variable empty")
 func (meta *pvcMetadata) stringParser(str string) string {
 	result := pattern.FindAllStringSubmatch(str, -1)
 	for _, r := range result {
@@ -76,14 +78,27 @@ const (
 	mountPath = "/persistentvolumes"
 )
 
-var _ controller.Provisioner = &nfsProvisioner{}
+var _ csiraidcontroller.Provisioner = &nfsProvisioner{}
 
-func (p *nfsProvisioner) Provision(ctx context.Context, options controller.ProvisionOptions) (*v1.PersistentVolume, controller.ProvisioningState, error) {
+func (p *nfsProvisioner) GetSource() string {
+	return p.source
+}
+
+func (p *nfsProvisioner) GetTarget() string {
+	return p.target
+}
+
+func (p *nfsProvisioner) GetActive() bool {
+	return p.active
+}
+
+func (p *nfsProvisioner) Provision(ctx context.Context, options csiraidcontroller.ProvisionOptions) (*v1.PersistentVolume, csiraidcontroller.ProvisioningState, error) {
 	if options.PVC.Spec.Selector != nil {
-		return nil, controller.ProvisioningFinished, fmt.Errorf("claim Selector is not supported")
+		return nil, csiraidcontroller.ProvisioningFinished, fmt.Errorf("claim Selector is not supported")
 	}
 	glog.V(4).Infof("nfs provisioner: VolumeOptions %v", options)
-	glog.V(4).Infof("csi-raid starts")
+	glog.Infof("csi-raid starts")
+	glog.Infof("csi-raid starts two rockets")
 
 	pvcNamespace := options.PVC.Namespace
 	pvcName := options.PVC.Name
@@ -113,7 +128,7 @@ func (p *nfsProvisioner) Provision(ctx context.Context, options controller.Provi
 
 	glog.V(4).Infof("creating path %s", fullPath)
 	if err := os.MkdirAll(fullPath, 0777); err != nil {
-		return nil, controller.ProvisioningFinished, errors.New("unable to create directory to provision new pv: " + err.Error())
+		return nil, csiraidcontroller.ProvisioningFinished, errors.New("unable to create directory to provision new pv: " + err.Error())
 	}
 	os.Chmod(fullPath, 0777)
 
@@ -137,7 +152,7 @@ func (p *nfsProvisioner) Provision(ctx context.Context, options controller.Provi
 			},
 		},
 	}
-	return pv, controller.ProvisioningFinished, nil
+	return pv, csiraidcontroller.ProvisioningFinished, nil
 }
 
 func (p *nfsProvisioner) Delete(ctx context.Context, volume *v1.PersistentVolume) error {
@@ -203,6 +218,38 @@ func (p *nfsProvisioner) getClassForVolume(ctx context.Context, pv *v1.Persisten
 	return class, nil
 }
 
+func getenvStr(key string) (string, error) {
+	v := os.Getenv(key)
+	if v == "" {
+		return v, ErrEnvVarEmpty
+	}
+	return v, nil
+}
+
+func getenvInt(key string) (int, error) {
+	s, err := getenvStr(key)
+	if err != nil {
+		return 0, err
+	}
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	return v, nil
+}
+
+func getenvBool(key string) (bool, error) {
+	s, err := getenvStr(key)
+	if err != nil {
+		return false, err
+	}
+	v, err := strconv.ParseBool(s)
+	if err != nil {
+		return false, err
+	}
+	return v, nil
+}
+
 func main() {
 	flag.Parse()
 	flag.Set("logtostderr", "true")
@@ -219,10 +266,22 @@ func main() {
 	if provisionerName == "" {
 		glog.Fatalf("environment variable %s is not set! Please set it.", provisionerNameKey)
 	}
+	source := os.Getenv("CSIRAID_SOURCE")
+	if source == "" {
+		glog.Fatalf("environment variable %s is not set! Please set it.", "CSIRAID_SOURCE")
+	}
+	target := os.Getenv("CSIRAID_TARGET")
+	if target == "" {
+		glog.Fatalf("environment variable %s is not set! Please set it.", "CSIRAID_TARGET")
+	}
+	active, eGetEnvBool := getenvBool("CSIRAID_ACTIVE")
+	if eGetEnvBool != nil {
+		glog.Fatalf("environment variable %s is not set! Please set it.", "CSIRAID_ACTIVE")
+	}
 	kubeconfig := os.Getenv("KUBECONFIG")
 	var config *rest.Config
 	if kubeconfig != "" {
-		// Create an OutOfClusterConfig and use it to create a client for the controller
+		// Create an OutOfClusterConfig and use it to create a client for the csiraidcontroller
 		// to use to communicate with Kubernetes
 		var err error
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -230,7 +289,7 @@ func main() {
 			glog.Fatalf("Failed to create kubeconfig: %v", err)
 		}
 	} else {
-		// Create an InClusterConfig and use it to create a client for the controller
+		// Create an InClusterConfig and use it to create a client for the csiraidcontroller
 		// to use to communicate with Kubernetes
 		var err error
 		config, err = rest.InClusterConfig()
@@ -243,12 +302,12 @@ func main() {
 		glog.Fatalf("Failed to create client: %v", err)
 	}
 
-	// The controller needs to know what the server version is because out-of-tree
+	// The csiraidcontroller needs to know what the server version is because out-of-tree
 	// provisioners aren't officially supported until 1.5
-	serverVersion, err := clientset.Discovery().ServerVersion()
-	if err != nil {
-		glog.Fatalf("Error getting server version: %v", err)
-	}
+// 	serverVersion, err := clientset.Discovery().ServerVersion()
+// 	if err != nil {
+// 		glog.Fatalf("Error getting server version: %v", err)
+// 	}
 
 	leaderElection := true
 	leaderElectionEnv := os.Getenv("ENABLE_LEADER_ELECTION")
@@ -263,14 +322,17 @@ func main() {
 		client: clientset,
 		server: server,
 		path:   path,
+		source: source,
+		target: target,
+		active: active,
 	}
-	// Start the provision controller which will dynamically provision efs NFS
+	// Start the provision csiraidcontroller which will dynamically provision efs NFS
 	// PVs
-	pc := controller.NewProvisionController(clientset,
+	pc := csiraidcontroller.NewProvisionController(clientset,
 		provisionerName,
 		clientNFSProvisioner,
-		serverVersion.GitVersion,
-		controller.LeaderElection(leaderElection),
+// 		serverVersion.GitVersion,
+		csiraidcontroller.LeaderElection(leaderElection),
 	)
 	// Never stops.
 	pc.Run(context.Background())

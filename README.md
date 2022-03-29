@@ -179,14 +179,39 @@ spec:
 To build your own custom container image from this repository, you will have to build and push the csi-raid image using the following instructions.
 
 ```sh
-make build
+enter new version of csi-raid-controller in go.mod
 make container
-# `csi-raid:latest` will be created. 
+# imag `csi-raid:latest` will be created. 
 # Note: This will build a single-arch image that matches the machine on which container is built.
-# To upload this to your custom registry, say `quay.io/myorg` and arch as amd64, you can use
+# To upload this to your custom registry, say `jw-cloud.org:18443/csi-raid`, you can use
+docker tag csi-raid:latest jw-cloud.org:18443/csi-raid:latest
+# imag `jw-cloud.org:18443/csi-raid:latest` will be created. 
+docker push jw-cloud.org:18443/csi-raid:latest
+
+# if a special version eg v0.0.8-SNAPSHOT should be published:
+docker tag csi-raid:latest jw-cloud.org:18443/csi-raid:v0.0.40
+docker push jw-cloud.org:18443/csi-raid:v0.0.40
+
 # docker tag csi-raid:latest quay.io/myorg/csi-raid-amd64:latest
 # docker push quay.io/myorg/csi-raid-amd64:latest
 ```
+
+#  Azure Storahe Account
+
+az login
+az storage account list
+https://portal.azure.com/#@922710f6-4c25-4c57-a7fd-ea148352e141/resource/subscriptions/6b744fb9-f617-44f3-bf2f-c539a826e665/resourceGroups/csiraid/providers/Microsoft.Storage/storageAccounts/azurecloadstorage/storagebrowser
+az storage container show -n yuuvistest --account-name azurecloadstorage --account-key
+az storage container list -n yuuvistest --account-name azurecloadstorage --account-key
+? - az storage blob directory list -c yuuvistest -d / --account-name azurecloadstorage --account-key
+az storage file list --share-name yuuvisfiles --account-name azurecloadstorage --account-key
+
+
+az ad sp create-for-rbac --name "azurecloadstorageprinzipal" \
+--role "Storage Blob Data Owner" \
+--scopes "/subscriptions/6b744fb9-f617-44f3-bf2f-c539a826e665/resourceGroups/csiraid/providers/Microsoft.Storage/storageAccounts/azurecloadstorage/blobServices/default/containers/yuuvistest" \
+> azure-principal.json
+
 
 # Build and publish with GitHub Actions
 
@@ -210,3 +235,11 @@ The pipeline adds several labels:
 * The provisioned storage is not guaranteed. You may allocate more than the NFS share's total size. The share may also not have enough storage space left to actually accommodate the request.
 * The provisioned storage limit is not enforced. The application can expand to use all the available storage regardless of the provisioned size.
 * Storage resize/expansion operations are not presently supported in any form. You will end up in an error state: `Ignoring the PVC: didn't find a plugin capable of expanding the volume; waiting for an external controller to process this PVC.`
+
+
+#### build and deploy the container image
+
+make container
+
+
+

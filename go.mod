@@ -3,20 +3,16 @@ module github.com/kubernetes-sigs/csi-raid
 go 1.14
 
 require (
+	github.com/JuergenWewer/csi-raid-controller v0.0.40
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/miekg/dns v1.1.29 // indirect
-	github.com/onsi/ginkgo v1.12.0 // indirect
-	github.com/onsi/gomega v1.9.0 // indirect
-	github.com/prometheus/client_golang v1.5.1 // indirect
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
-	k8s.io/api v0.18.0
-	k8s.io/apimachinery v0.18.0
-	k8s.io/client-go v0.18.0
-	k8s.io/klog v1.0.0 // indirect
+	golang.org/x/net v0.0.0-20211011170408-caeb26a5c8c0 // indirect
+	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1 // indirect
+	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c // indirect
+	k8s.io/api v0.19.1
+	k8s.io/apimachinery v0.19.1
+	k8s.io/client-go v0.19.1
 	k8s.io/kubernetes v1.18.0
 	k8s.io/utils v0.0.0-20200327001022-6496210b90e8 // indirect
-	sigs.k8s.io/sig-storage-lib-external-provisioner/v6 v6.0.0
 )
 
 replace (
