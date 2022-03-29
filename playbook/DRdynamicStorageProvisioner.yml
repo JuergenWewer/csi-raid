@@ -1,8 +1,8 @@
-- name: Install dynamic storage provisioner
+- name: Install csi-raid dynamic storage provisioner
   kubernetes.core.helm:
     name: dynamicstorageprovisioner
     namespace: kube-system
-    chart_ref: ../yuuvis/dynamic-storage-provisioner
+    chart_ref: ../csi-raid/dynamic-storage-provisioner
     kubeconfig_path: "{{ kubeconfig }}"
     create_namespace: True
     wait: true
