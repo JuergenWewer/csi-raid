@@ -101,9 +101,6 @@ $(CMDS:%=build-%): build-%: check-go-version-go
 		os_arch_seen+=";$$os-$$arch"; \
 	done
 
-$(CMDS:%=container-%): container-%: build-%
-    docker build -t $*:latest -f $(shell if [ -e ./$(CMDS_DIR)/$*/Dockerfile ]; then echo ./$(CMDS_DIR)/$*/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .
-
 $(CMDS:%=push-%): push-%: container-%
 	set -ex; \
 	push_image () { \
