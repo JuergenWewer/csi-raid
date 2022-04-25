@@ -103,7 +103,7 @@ $(CMDS:%=build-%): build-%: check-go-version-go
 
 $(CMDS:%=container-%): container-%: build-%
 	# docker build -t $*:latest -f $(shell if [ -e ./$(CMDS_DIR)/$*/Dockerfile ]; then echo ./$(CMDS_DIR)/$*/Dockerfile; else echo Dockerfile; fi) --label revision=$(REV) .
-    buildctl build --frontend dockerfile.v0 --local context=. --local dockerfile=. --output type=image,name=jw-cloud.org:18443/csi-raid:latest,push=true
+    # buildctl build --frontend dockerfile.v0 --local context=. --local dockerfile=. --output type=image,name=jw-cloud.org:18443/csi-raid:latest,push=true
 
 $(CMDS:%=push-%): push-%: container-%
 	set -ex; \
