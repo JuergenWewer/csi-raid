@@ -242,4 +242,22 @@ The pipeline adds several labels:
 make container
 
 
+######################## CI/CD - Pipeline ####################################
+
+enter the new version of CSI-raid in buildctl.sh
+
+for example: v0.0.41
+
+enter the new version in dynamic-storage-provisioner/templates/csi-raid-deployment.yaml
+
+abnahme:
+
+git push
+start the jenkins job
+
+produktion:
+
+##################################################################################
+
+
 
