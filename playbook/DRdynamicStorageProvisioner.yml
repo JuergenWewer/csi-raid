@@ -7,9 +7,4 @@
     create_namespace: True
     wait: true
     force: true
-    values:
-      csiraid:
-        nfs:
-          server: "{{ nfsserver }}"
-          secret: "{{ nfssecret }}"
-          backup: "{{ nfsbackup }}"
+    values_files: ../csi-raid-values/values.yaml
