@@ -50,13 +50,13 @@ spec:
       volumes:
         - name: nfs-client-root
           nfs:
-            server: {{.Values.csiraid.nfs.server}}
+            server: "{{.Values.csiraid.nfs.server}}"
             path: /mnt/optimal/nfs-csi-provisioner
         - name: csi-raid-config
           configMap:
             name: csi-raid-configmap
         - name: ssh-keys-v
           secret:
-            secretName: {{.Values.csiraid.nfs.secret}}
+            secretName: "{{.Values.csiraid.nfs.secret}}"
             defaultMode: 0600
 
