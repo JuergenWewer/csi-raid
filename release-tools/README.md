@@ -69,7 +69,7 @@ is a stripped down copy of the [corresponding
 script](https://github.com/kubernetes/kubernetes/blob/release-1.14/hack/verify-shellcheck.sh)
 in the Kubernetes repository. It can be used to check for certain
 errors shell scripts, like missing quotation marks. The default
-`test-shellcheck` target in [build.make](./build.make) only checks the
+`test-shellcheck` target in [build.make](./build-test.make) only checks the
 scripts in this directory. Components can add more directories to
 `TEST_SHELLCHECK_DIRS` to check also other scripts.
 
