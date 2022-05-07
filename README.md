@@ -192,6 +192,11 @@ docker push jw-cloud.org:18443/csi-raid:latest
 docker tag csi-raid:latest jw-cloud.org:18443/csi-raid:v0.0.40
 docker push jw-cloud.org:18443/csi-raid:v0.0.40
 
+to deploy a testdeployment:
+
+helm install testinstall testinstall
+helm uninstall testinstall
+
 # docker tag csi-raid:latest quay.io/myorg/csi-raid-amd64:latest
 # docker push quay.io/myorg/csi-raid-amd64:latest
 ```
